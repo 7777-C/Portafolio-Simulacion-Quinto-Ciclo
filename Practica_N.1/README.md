@@ -237,7 +237,7 @@ $$
 
 ---
 
-## ▶7. Cómo ejecutar el proyecto
+## 7. Cómo ejecutar el proyecto
 
 ### 7.1 Clonar el repositorio
 
