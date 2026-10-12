@@ -1,20 +1,6 @@
-# Modelo de Simulación de Posibilidad de Lluvia
+## 1. Descripción del Proyecto
 
-**Asignatura:** Simulación
-**Ciclo:** 5to
-**Práctica Nro.:** 01
-**Título:** Construcción y simulación computacional de un modelo matemático
-**Autor:** Mark González
-**Docente:** Ing. José Guamán
-**Fecha:** 05 de Octubre del 2026
-
----
-
-## 1. Descripción
-
-Este proyecto implementa un **modelo matemático para estimar la posibilidad de lluvia** a lo largo de un período de 24 horas.
-
-El cálculo se realiza mediante la siguiente fórmula:
+Este proyecto implementa un **modelo matemático** para estimar la posibilidad de lluvia a lo largo de 24 horas, aplicando la fórmula:
 
 $$
 I = 0.5H + 0.3N + 0.2T_f
@@ -22,378 +8,259 @@ $$
 
 Donde:
 
-* **H** = Humedad normalizada, con valores entre 0 y 1.
-* **N** = Nubosidad normalizada, con valores entre 0 y 1.
-* **Tf** = Factor de temperatura, determinado mediante una tabla de valores.
-* **I** = Índice de posibilidad de lluvia.
+- **H** = humedad normalizada (0 a 1).
+- **N** = nubosidad normalizada (0 a 1).
+- **Tf** = factor de temperatura (según tabla del PDF).
+- **I** = índice de posibilidad de lluvia.
 
-El resultado obtenido se clasifica de acuerdo con las siguientes reglas:
+### Propósito
 
-| Índice `I`        | Estado           |
-| ----------------- | ---------------- |
-| `I < 0.40`        | Sin lluvia       |
-| `0.40 ≤ I < 0.60` | Baja posibilidad |
-| `0.60 ≤ I < 0.75` | Lluvia probable  |
-| `I ≥ 0.75`        | Lluvia           |
+Comprender el proceso de construcción de un modelo matemático y analizar su comportamiento mediante Python, aplicando buenas prácticas de diseño.
 
----
+### Problema que resuelve
 
-## 2. Arquitectura del proyecto
+Permite **identificar en qué horas del día existe posibilidad de lluvia** a partir de datos de humedad, nubosidad y temperatura, clasificando cada hora en 4 estados:
 
-Para organizar el sistema se aplicaron dos patrones de diseño:
+| Índice I | Estado |
+|---|---|
+| I < 0.40 | Sin lluvia |
+| 0.40 ≤ I < 0.60 | Baja posibilidad |
+| 0.60 ≤ I < 0.75 | Lluvia probable |
+| I ≥ 0.75 | Lluvia |
 
-### 2.1 Patrón MVC
-
-Se utiliza el patrón **Modelo - Vista - Controlador ** para separar las responsabilidades principales de la aplicación.
-
-| Componente      | Responsabilidad                                                          |
-| --------------- | ------------------------------------------------------------------------ |
-| **Modelo**      | Contiene la lógica de negocio y realiza el cálculo del índice de lluvia. |
-| **Vista**       | Presenta los resultados mediante una tabla y una gráfica.                |
-| **Controlador** | Coordina la comunicación entre los datos, el modelo y la vista.          |
-
-
-### 2.2 Patrón Strategy
-
-El patrón **Strategy** se utiliza dentro del modelo para permitir diferentes estrategias de cálculo.
-
-En este proyecto se aplica principalmente para:
-
-* Determinar el **factor de temperatura `Tf`**.
-* Clasificar el **índice de posibilidad de lluvia**.
+La práctica corresponde a la **Unidad 1: Introducción a la Simulación** de la asignatura **Simulación – Ciclo 5**.
 
 ---
 
-## 3. Estructura del proyecto
+## 2. Tecnologías Utilizadas
 
-```text
-modelo_lluvia/
-│
-├── modelo/
-│   ├── __init__.py
-│   ├── estrategias.py
-│   └── modelo_lluvia.py
-│
-├── vista/
-│   ├── __init__.py
-│   └── vista_lluvia.py
-│
-├── controlador/
-│   ├── __init__.py
-│   └── controlador_lluvia.py
-│
-├── datos/
-│   ├── __init__.py
-│   └── datos_entrada.py
-│
-├── main.py
-├── grafica_lluvia.png
-└── README.md
-```
+| Tecnología | Versión | Uso |
+|---|---|---|
+| Python | 3.11 o superior | Lenguaje principal |
+| NumPy | ≥ 1.26 | Cálculo numérico y eje X de la gráfica |
+| Matplotlib | ≥ 3.8 | Generación de la gráfica |
+| ABC (`abc`) | estándar | Clases abstractas para Strategy |
+| Visual Studio Code | última | Entorno de desarrollo |
+| Git / GitHub | — | Control de versiones |
+| Oracle Linux | — | Sistema operativo |
 
-### Descripción de los archivos
-
-| Archivo                 | Descripción                                                          |
-| ----------------------- | -------------------------------------------------------------------- |
-| `main.py`               | Punto de entrada de la aplicación.                                   |
-| `modelo_lluvia.py`      | Contiene la lógica principal del modelo matemático.                  |
-| `estrategias.py`        | Implementa las estrategias relacionadas con `Tf` y la clasificación. |
-| `vista_lluvia.py`       | Muestra los resultados y genera la gráfica.                          |
-| `controlador_lluvia.py` | Coordina el funcionamiento general de la aplicación.                 |
-| `datos_entrada.py`      | Contiene los datos utilizados para la simulación.                    |
-| `grafica_lluvia.png`    | Gráfica generada a partir de los resultados.                         |
-| `README.md`             | Documentación del proyecto.                                          |
+**Arquitectura:** Modelo–Vista–Controlador (MVC) + Strategy.
 
 ---
 
-## 4. Interpolación del factor de temperatura `Tf`
+## 3. Instalación
 
-La tabla para el modelo define valores de `Tf`:
+### Requisitos previos
 
-```text
-10, 12, 14, 16, 18, 20, 22, 24, 26, 28 °C
-```
+- Python 3.11 o superior.
+- Git (opcional, para clonar el repositorio).
+- Sistema operativo: Linux, Windows o macOS.
 
-Sin embargo, los datos utilizados en la simulación contienen temperaturas que no aparecen directamente en dicha tabla, como:
-
-```text
-15 °C
-17 °C
-```
-
-Para obtener un valor de `Tf` para estas temperaturas se implementó **interpolación lineal**.
-
-La fórmula utilizada es:
-
-$$
-Tf = Tf_1 + (Tf_2-Tf_1)
-\frac{T-T_1}{T_2-T_1}
-$$
-
-### Ejemplo: 17 °C
-
-Si:
-
-```text
-T1 = 16 °C
-Tf1 = 0.70
-
-T2 = 18 °C
-Tf2 = 0.60
-```
-
-Entonces:
-
-$$
-Tf = 0.70 + (0.60-0.70)
-\frac{17-16}{18-16}
-$$
-
-$$
-Tf = 0.70 - 0.05
-$$
-
-$$
-Tf = 0.65
-$$
-
-Por lo tanto:
-
-```text
-17 °C → Tf = 0.65
-```
-
-### Ejemplo: 15 °C
-
-Utilizando los valores correspondientes a 14 °C y 16 °C:
-
-```text
-14 °C → Tf = 0.80
-16 °C → Tf = 0.70
-```
-
-Se obtiene:
-
-$$
-Tf = 0.80 + (0.70-0.80)
-\frac{15-14}{16-14}
-$$
-
-$$
-Tf = 0.75
-$$
-
-Por lo tanto:
-
-```text
-15 °C → Tf = 0.75
-```
----
-
-## 5. Funcionamiento del modelo
-
-El proceso general de la simulación es:
-
-```text
-Datos de entrada
-       │
-       ▼
-Normalización de H y N
-       │
-       ▼
-Cálculo de Tf
-       │
-       ▼
-Cálculo del índice I
-       │
-       ▼
-Clasificación del resultado
-       │
-       ▼
-Presentación en tabla
-       │
-       ▼
-Generación de gráfica
-```
-
-El índice se obtiene mediante:
-
-$$
-I = 0.5H + 0.3N + 0.2T_f
-$$
-
----
-
-## 6. Tecnologías utilizadas
-
-* **Python 3**
-* **NumPy**
-* **Matplotlib**
-* Patrón **MVC**
-* Patrón **Strategy**
-* Interpolación lineal
-* Modelado matemático
-* Simulación computacional
-
----
-
-## 7. Cómo ejecutar el proyecto
-
-### 7.1 Clonar el repositorio
+### Paso 1 – Clonar o descargar el proyecto
 
 ```bash
-git clone <URL_DEL_REPOSITORIO>
+git clone https://github.com/7777-C/Portafolio-Simulacion-Quinto-Ciclo.git
+cd Portafolio-Simulacion-Quinto-Ciclo
 ```
 
-Ingresar a la carpeta:
+O simplemente descomprimir el `.zip` en la ubicación deseada.
+
+### Paso 2 – Crear el entorno virtual
+
+**Linux / macOS:**
 
 ```bash
-cd modelo_lluvia
-```
-
-### 7.2 Crear un entorno virtual
-
-```bash
-python -m venv venv
-```
-
-### 7.3 Activar el entorno virtual
-
-En Windows:
-
-```powershell
-venv\Scripts\activate
-```
-
-En Linux/macOS:
-
-```bash
+python3 -m venv venv
 source venv/bin/activate
 ```
 
-### 7.4 Instalar las dependencias
+**Windows (PowerShell):**
 
-```bash
-pip install numpy matplotlib
+```powershell
+py -3.11 -m venv venv
+.\venv\Scripts\Activate.ps1
 ```
 
-### 7.5 Ejecutar el programa
+### Paso 3 – Instalar dependencias
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+
+Contenido de `requirements.txt`:
+
+```text
+numpy
+matplotlib
+```
+
+---
+
+## 4. Uso
+
+### Ejecución principal
+
+Desde la **raíz del proyecto** (donde está `main.py`):
 
 ```bash
 python main.py
 ```
 
----
+### ¿Qué hace el programa?
 
-## 8. Salida esperada
+1. Carga los datos del PDF desde `datos/datos_entrada.py`.
+2. Calcula el **factor de temperatura Tf** con interpolación lineal.
+3. Calcula el **índice I** para cada hora.
+4. Clasifica cada hora en 4 estados.
+5. Muestra una **tabla** por consola.
+6. Genera una **gráfica** en `grafica_lluvia.png`.
 
-Al ejecutar el programa se muestran los resultados.
-
-Además, se genera una gráfica:
-
-```text
-grafica_lluvia.png
-```
----
-
-## 9. Resultados
-
-|  Hora | Humedad | Nubosidad | Temp. |    H |    N |   Tf | Índice | Estado           |
-| :---: | ------: | --------: | ----: | ---: | ---: | ---: | -----: | ---------------- |
-| 06:00 |      65 |        40 |    14 | 0.65 | 0.40 | 0.80 |  0.605 | Lluvia probable  |
-| 08:00 |      70 |        50 |    16 | 0.70 | 0.50 | 0.70 |  0.640 | Lluvia probable  |
-| 10:00 |      68 |        45 |    18 | 0.68 | 0.45 | 0.60 |  0.595 | Baja posibilidad |
-| 12:00 |      60 |        30 |    22 | 0.60 | 0.30 | 0.40 |  0.470 | Baja posibilidad |
-| 14:00 |      75 |        70 |    20 | 0.75 | 0.70 | 0.50 |  0.685 | Lluvia probable  |
-| 16:00 |      85 |        85 |    18 | 0.85 | 0.85 | 0.60 |  0.800 | Lluvia           |
-| 18:00 |      92 |        95 |    16 | 0.92 | 0.95 | 0.70 |  0.885 | Lluvia           |
-| 20:00 |      88 |        90 |    17 | 0.88 | 0.90 | 0.65 |  0.840 | Lluvia           |
-| 22:00 |      80 |        75 |    15 | 0.80 | 0.75 | 0.75 |  0.775 | Lluvia           |
-
-### Interpretación
-
-El valor máximo del índice se presenta a las **18:00**, con:
+### Salidas generadas
 
 ```text
-I = 0.885
+modelo_lluvia/
+├── grafica_lluvia.png
+└── (tabla impresa en consola)
 ```
 
-De acuerdo con las reglas establecidas, este resultado corresponde al estado:
+### Personalizar parámetros
 
-**Lluvia**
+Edita el archivo `datos/datos_entrada.py`:
 
-Las horas con mayor índice de posibilidad de lluvia son:
-
-* **16:00 → I = 0.800**
-* **18:00 → I = 0.885**
-* **20:00 → I = 0.840**
-* **22:00 → I = 0.775**
-
----
-
-## 10. Declaración de uso de Inteligencia Artificial
-
-En cumplimiento de los principios de **transparencia, honestidad y responsabilidad académica**, se declara el uso de herramientas de Inteligencia Artificial durante el desarrollo del proyecto.
-
-### 10.1 ¿Se utilizó IA?
-
-**Sí, de forma limitada y como apoyo conceptual.**
-
-### 10.2 ¿Cómo se utilizó?
-
-La Inteligencia Artificial fue utilizada como herramienta de consulta y explicación para:
-
-* Comprender conceptos relacionados con el patrón de diseño **Strategy**.
-* Diferenciar un patrón de diseño de una estructura convencional de carpetas.
-* Obtener orientación conceptual sobre la organización **MVC**.
-* Comprender mensajes de error de Python y posibles causas.
-* Comprender el procedimiento matemático de la **interpolación lineal**.
-* Resolver dudas puntuales relacionadas con la implementación del modelo.
-
-### 10.3 ¿Qué tanto se utilizó?
-
-El uso de IA se limitó a la etapa de **comprensión, consulta y orientación conceptual** y no sustituyó el trabajo de implementación realizado en el proyecto.
-
-### 10.4 ¿Se utilizó IA para generar el código?
-
-La IA fue utilizada como apoyo para comprender conceptos y resolver dudas, pero las clases, métodos y lógica fueron desarrollados y revisados por el autor.
-
-### 10.5 ¿Qué se aprendió del proceso?
-
-El uso de IA como herramienta de aprendizaje permiti reforzar los siguientes conocimientos:
-
-* Diferencia entre **arquitectura y patrones de diseño**.
-* Organización de un proyecto utilizando **MVC**.
-* Aplicación del patrón **Strategy**.
-* Utilización de **interpolación lineal**.
-* Implementación de un modelo matemático mediante Python.
-* Interpretación de los resultados de una simulación.
-* Identificación y corrección de errores durante el desarrollo.
-
-### 10.6 Declaración final
-
-El autor declara que el proyecto fue desarrollado comprendiendo su funcionamiento y que puede explicar las principales decisiones tomadas durante su implementación.
-
-La Inteligencia Artificial fue utilizada como una **herramienta de apoyo para el aprendizaje y la comprensión conceptual**, sin sustituir el proceso de desarrollo, prueba y validación del proyecto.
+```python
+class DatosEntrada:
+    HORAS       = ["06:00", "08:00", "10:00", "12:00", "14:00",
+                   "16:00", "18:00", "20:00", "22:00"]
+    HUMEDAD     = [65, 70, 68, 60, 75, 85, 92, 88, 80]
+    NUBOSIDAD   = [40, 50, 45, 30, 70, 85, 95, 90, 75]
+    TEMPERATURA = [14, 16, 18, 22, 20, 18, 16, 17, 15]
+```
 
 ---
 
-## 11. Referencias
+## 5. Estructura del Proyecto
 
-* Material de clase y diapositivas de la semana 1 de la asignatura **Simulación**.
-* **Guía de Actividades Práctico-Experimentales Nro. 001**.
-* Python Software Foundation. *Python Documentation*.
-* Matplotlib Development Team. *Matplotlib Documentation*.
-* Refactoring.Guru. *Strategy Design Pattern*.
+```text
+modelo_lluvia/
+│
+├── main.py                          # Punto de entrada
+├── requirements.txt
+├── README.md
+│
+├── modelo/                          # MODELO – lógica matemática
+│   ├── __init__.py
+│   ├── estrategias.py               # Strategy: Tf y clasificación
+│   └── modelo_lluvia.py             # Cálculo del índice I
+│
+├── vista/                           # VISTA – presentación
+│   ├── __init__.py
+│   └── vista_lluvia.py              # Tabla + gráfica
+│
+├── controlador/                     # CONTROLADOR – orquesta M + V
+│   ├── __init__.py
+│   └── controlador_lluvia.py
+│
+├── datos/                           # DATOS de entrada
+│   ├── __init__.py
+│   └── datos_entrada.py
+│
+└── grafica_lluvia.png               # Generada al ejecutar
+```
+
+### Descripción de carpetas
+
+| **Carpeta** | **Responsabilidad** |
+| :--- | :--- |
+| `modelo/` | Fórmula `I = 0.5H + 0.3N + 0.2Tf`, cálculo de Tf y clasificación |
+| `vista/` | Tabla en consola y gráfica con Matplotlib |
+| `controlador/` | Coordina el Modelo y la Vista |
+| `datos/` | Datos crudos del PDF |
 
 ---
 
-##  Autor
+## 6. Modelos Matemáticos Implementados
 
-**Mark González**
+### 6.1 Fórmula principal
 
-Estudiante de Ingeniería en Sistemas
+$$
+I = 0.5H + 0.3N + 0.2T_f
+$$
 
-**Asignatura:** Simulacion
-**Ciclo:** 5to
-**Año:** 2026
+### 6.2 Factor de temperatura (Tf)
+
+| **Temperatura** | **Tf** |
+| :--- | :--- |
+| ≤ 10 °C | 1.00 |
+| 12 °C | 0.90 |
+| 14 °C | 0.80 |
+| 16 °C | 0.70 |
+| 18 °C | 0.60 |
+| 20 °C | 0.50 |
+| 22 °C | 0.40 |
+| 24 °C | 0.30 |
+| 26 °C | 0.20 |
+| ≥ 28 °C | 0.10 |
+
+### 6.3 Interpolación lineal (obligatoria)
+
+El PDF solo da Tf para temperaturas pares, pero la tabla de datos incluye **15 °C** y **17 °C**. Por eso se interpola:
+
+$$
+T_f = v_1 + (v_2-v_1)\frac{t-t_1}{t_2-t_1}
+$$
+
+**Ejemplos:**
+
+- 17 °C → `Tf = 0.70 + (0.60 - 0.70) × (17 - 16) / (18 - 16) = 0.65`
+- 15 °C → `Tf = 0.80 + (0.70 - 0.80) × (15 - 14) / (16 - 14) = 0.75`
+
+### 6.4 Clasificación
+
+| **Índice I** | **Estado** |
+| :--- | :--- |
+| I < 0.40 | Sin lluvia |
+| 0.40 ≤ I < 0.60 | Baja posibilidad |
+| 0.60 ≤ I < 0.75 | Lluvia probable |
+| I ≥ 0.75 | Lluvia |
+
+---
+
+## 7. Información Adicional
+
+### 7.1 Interpretación de las gráficas
+
+- **Eje X:** horas del día (06:00 a 22:00).
+- **Eje Y:** índice I (0 a 1).
+- **Línea azul:** valor del índice I en cada hora.
+- **Puntos de colores:** estado según la clasificación.
+  - 🟢 Verde → Sin lluvia.
+  - 🟡 Amarillo → Baja posibilidad.
+  - 🟠 Naranja → Lluvia probable.
+  - 🔴 Rojo → Lluvia.
+- **Líneas punteadas:** umbrales 0.40, 0.60 y 0.75.
+
+**Comportamiento observado:**
+
+- El índice **crece** desde las 06:00 hasta las 18:00 (pico máximo: 0.885).
+- Luego **decrece** ligeramente hacia las 22:00.
+- Las horas con mayor probabilidad de lluvia son **16:00, 18:00, 20:00 y 22:00**.
+
+### 7.2 Notas y consideraciones
+
+- La **interpolación lineal** es necesaria para 15 °C y 17 °C.
+- Los **pesos** (0.5, 0.3, 0.2) suman 1.0, garantizando que I esté entre 0 y 1.
+- La **humedad** es la variable de mayor peso en el modelo.
+- El uso del backend `Agg` en Matplotlib evita errores en Linux sin entorno gráfico.
+
+### 7.3 Declaración de uso de Inteligencia Artificial
+
+Durante el desarrollo de esta práctica se utilizó **inteligencia artificial como apoyo puntual**, únicamente en los siguientes aspectos:
+
+- **Aclaración de conceptos** que no se tenían del todo claros (por ejemplo, en qué consiste el patrón Strategy y cómo se diferencia de la herencia tradicional).
+- **Explicación de la sintaxis y uso de librerías** específicas de Python (NumPy, Matplotlib) en fragmentos donde no se sabía cómo proceder.
+- **Apoyo en la interpretación de las gráficas**, ya que en un inicio no se comprendía qué significaban los puntos de colores ni cómo se relacionaban con los umbrales.
+
+**No se utilizó la IA** para generar el proyecto completo, la arquitectura MVC, los algoritmos de cálculo ni la lógica interna de cada clase. Todo el diseño, la organización de carpetas, la implementación de las ecuaciones y las decisiones técnicas fueron realizados por el autor de esta práctica.
+
+El uso de esta herramienta se declara bajo el principio de **transparencia y honestidad académica** establecido en el resultado de aprendizaje de la unidad.
