@@ -1,0 +1,5 @@
+.venv/
+**/.venv/
+__pycache__/
+*.pyc
+graficas_mm1.png
